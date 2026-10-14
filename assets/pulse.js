@@ -848,13 +848,20 @@ function historyHtml(d) {
       <div class="chart__axis"><span>-24h</span><span>-18h</span><span>-12h</span><span>-6h</span><span>现在</span></div>
     </div></div>`;
 }
+let drawerClearTimer = 0;
 function renderDrawer() {
   const ws = $('#workspace');
   const drawer = $('#drawer');
   const s = state.selectedId && state.map.get(state.selectedId);
   ws.classList.toggle('has-drawer', !!s);
   drawer.setAttribute('aria-hidden', s ? 'false' : 'true');
-  if (!s) { drawer.innerHTML = ''; return; }
+  drawer.inert = !s;
+  clearTimeout(drawerClearTimer);
+  if (!s) {
+    // 保留内容直到渐出动画结束，再清空
+    drawerClearTimer = setTimeout(() => { if (!state.selectedId) drawer.innerHTML = ''; }, 400);
+    return;
+  }
   const scroll = drawer.scrollTop;
   drawer.innerHTML = drawerHtml(s);
   drawer.scrollTop = scroll;
@@ -1169,8 +1176,14 @@ function bindEvents() {
     const chip = e.target.closest('[data-probe-for]');
     if (chip) openProbePopover(chip, chip.dataset.probeFor);
   });
-  $('#workspace').addEventListener('click', (e) => {
-    if (innerWidth <= 1100 && e.target === $('#workspace')) go(null);
+  // 点击大卡片以外的区域关闭大卡片，恢复原布局。
+  // 例外：服务器卡片（切换到另一台）、顶栏、主延迟浮层与弹窗。
+  document.addEventListener('click', (e) => {
+    if (!state.selectedId) return;
+    const t = e.target;
+    if (!t.isConnected) return;
+    if (t.closest('.drawer, .card, .topbar, .popover, .overlay, [data-probe-for]')) return;
+    go(null);
   });
   document.addEventListener('click', (e) => { if (!e.target.closest('.popover') && !e.target.closest('[data-probe-for]')) closePopover(); });
   document.addEventListener('keydown', (e) => {
