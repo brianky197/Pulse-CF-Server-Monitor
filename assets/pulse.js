@@ -621,9 +621,11 @@ function filtered() {
   return list;
 }
 
-function resRow(label, detail, p, color) {
+// 紧凑资源行：标签 | 进度条 | 百分比；具体用量放在悬停提示里（详情侧栏有完整数值）
+function resRow(label, detail, p, color, valueText) {
   const lv = usageLevel(p);
-  return `<div class="res__row"><div class="res__line">${label}<span class="d">${detail}</span><span class="v ${lv ? 'is-' + lv : ''}">${Math.round(p)}%</span></div><div class="meter"><span style="width:${Math.max(p > 0 ? 1.5 : 0, p)}%;background:${lv === 'danger' ? 'var(--danger)' : `var(--${color})`}"></span></div></div>`;
+  const bar = lv === 'danger' ? 'var(--danger)' : `var(--${color})`;
+  return `<div class="row" title="${esc(detail ? `${label} ${detail}` : label)}"><span class="row__l">${label}</span><div class="meter"><span style="width:${Math.max(p > 0 ? 1.5 : 0, p)}%;background:${bar}"></span></div><span class="row__v ${lv ? 'is-' + lv : ''}">${valueText ?? Math.round(p) + '%'}</span></div>`;
 }
 function cardHtml(s) {
   const on = isOnline(s);
@@ -644,47 +646,40 @@ function cardHtml(s) {
   if (on && mem >= 90) alerts.push('内存过高');
   if (limit && tp >= 90) alerts.push('流量将满');
   const specs = [cores ? `${cores}C` : '', s.ram_total ? fmtMB(s.ram_total) : '', s.disk_total ? fmtMB(s.disk_total) : ''].filter(Boolean).join(' · ');
+  const expText = exp ? (exp.days < 0 ? '<span class="c-danger">已过期</span>' : `余 ${exp.days} 天`) : '';
   return `
     <div class="card__head">
       <div class="card__title">
         <span class="dot ${on ? '' : 'is-off'}"></span>
-        <span class="card__name">${esc(s.name)}</span>
+        <span class="card__name" title="${esc(s.name)}">${esc(s.name)}</span>
         ${alerts.map(a => `<span class="tag tag--warn">${a}</span>`).join('')}
-        <span class="card__uptime ${on ? '' : 'is-off'}">${on ? (days !== null ? `在线 ${days} 天` : '在线') : '离线'}</span>
+        <span class="card__uptime ${on ? '' : 'is-off'}">${on ? (days !== null ? `${days} 天` : '在线') : '离线'}</span>
       </div>
       <div class="card__meta">
         ${code ? `<span class="tag"><img src="${flagUrl(code)}" alt="" onerror="this.remove()">${esc(code)}</span>` : ''}
-        ${s.server_group ? `<span>${icon('layers', 'i')}</span><span>${esc(s.server_group)}</span>` : ''}
-        ${specs ? `<span class="meta-sep">·</span><span class="mono">${specs}</span>` : ''}
+        ${specs ? `<span class="mono">${specs}</span>` : ''}
+        ${price || expText ? `<span class="card__price">${price ? esc(price.text) : ''}${price && expText ? ' · ' : ''}${expText}</span>` : ''}
       </div>
     </div>
-    <div class="res">
+    <div class="rows">
       ${resRow('CPU', cores ? `${cores} 核` : '', cpu, 'cpu')}
       ${resRow('内存', s.ram_total ? `${fmtMB(s.ram_used)} / ${fmtMB(s.ram_total)}` : '', mem, 'mem')}
       ${resRow('磁盘', s.disk_total ? `${fmtMB(s.disk_used)} / ${fmtMB(s.disk_total)}` : '', disk, 'disk')}
+      ${state.config.show_tf === false ? '' : resRow('流量', `${fmtBytes(used)} / ${limit ? fmtBytes(limit) : '不限'}`, tp, tp >= 90 ? 'warn' : 'down', limit ? undefined : fmtBytes(used))}
     </div>
-    <div class="net">
-      <div><span class="l" style="color:var(--up)">↑ 上传</span><span class="v">${on ? fmtSpeed(s.net_out_speed) : '--'}</span></div>
-      <div><span class="l" style="color:var(--down)">↓ 下载</span><span class="v">${on ? fmtSpeed(s.net_in_speed) : '--'}</span></div>
+    <div class="netline">
+      <span><b style="color:var(--up)">↑</b> ${on ? fmtSpeed(s.net_out_speed) : '--'}</span>
+      <span><b style="color:var(--down)">↓</b> ${on ? fmtSpeed(s.net_in_speed) : '--'}</span>
     </div>
-    ${state.config.show_tf === false ? '' : `<div class="traffic">
-      <div class="res__line">月流量<span class="d">${fmtBytes(used)} / ${limit ? fmtBytes(limit) : '不限'}</span><span class="v">${limit ? Math.round(tp) + '%' : '--'}</span></div>
-      <div class="meter"><span style="width:${Math.max(used ? 1.5 : 0, tp)}%;background:${tp >= 90 ? 'var(--warn)' : 'var(--down)'}"></span></div>
-    </div>`}
     <div class="lat">
       <div class="lat__head">
-        <span class="lat__dot bg-${lv}"></span>主延迟
-        ${prim ? `<button class="probe-chip" type="button" data-probe-for="${esc(s.id)}">${esc(probeName(prim.key))}${icon('caret')}</button>` : '<span class="c-muted">未配置探测</span>'}
-        <span class="lat__loss">${prim && probePresent(s[prim.loss]) ? `丢包 ${num(s[prim.loss])}%` : prim ? '丢包 0%' : ''}</span>
+        <span class="lat__dot bg-${lv}"></span>
+        ${prim ? `<button class="probe-chip" type="button" data-probe-for="${esc(s.id)}" title="切换主延迟探测点">${esc(probeName(prim.key))}${icon('caret')}</button>` : '<span class="c-muted">未配置探测</span>'}
+        <span class="lat__loss">${prim && probePresent(s[prim.loss]) ? `丢包 ${num(s[prim.loss])}%` : ''}</span>
         <span class="lat__now c-${lv}">${probePresent(now) ? `${Math.round(num(now))} ms` : '--'}</span>
       </div>
-      ${prim ? barsHtml(s, prim.key, LAT_POINTS, 26) : '<div class="bars bars--empty" style="height:26px">—</div>'}
-      <div class="lat__axis"><span>-2h</span><span>其余 ${Math.max(0, availableProbes(s).length - 1)} 个探测点见详情</span><span>现在</span></div>
-    </div>
-    ${price || exp ? `<div class="card__foot">
-      ${icon('coin')}<span>价值</span><span class="v">${price ? esc(price.text) : '--'}</span>
-      <span class="r">${exp ? (exp.days < 0 ? '<span class="c-danger">已过期</span>' : `剩余 ${exp.days} 天`) : '剩余 --'}</span>
-    </div>` : ''}`;
+      ${prim ? barsHtml(s, prim.key, LAT_POINTS, 20) : '<div class="bars bars--empty" style="height:20px">—</div>'}
+    </div>`;
 }
 
 const cardEls = new Map();
