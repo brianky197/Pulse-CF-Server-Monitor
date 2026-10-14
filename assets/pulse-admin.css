@@ -1,0 +1,174 @@
+/*
+ * Pulse 后台皮肤（可选）
+ * CF-Server-Monitor 的管理后台固定由内置主题渲染，第三方主题无法替换。
+ * 本文件把内置后台的配色、字体、圆角与按钮样式调成 Pulse 风格。
+ *
+ * 启用方式：后台「外观」→ 自定义 <head> 中加入：
+ *   <link rel="stylesheet" href="/assets/pulse-admin.css?v=1.0.2">
+ *
+ * 作用域：仅匹配内置前端（<html> 上没有 data-appearance 属性）；
+ * Pulse 前台页面的 <html> 始终带 data-appearance，因此不会受影响。
+ * 初音（Mikus）模式保持原样。
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ---------- 深色配色 ---------- */
+html:not([data-appearance]) body:not(.light):not(.mikus-theme) {
+  --bg-primary: #0b0e13;
+  --bg-secondary: #121720;
+  --bg-card: #121720;
+  --bg-hover: #19202b;
+  --border-color: #232b38;
+  --border-active: #3a4556;
+  --text-primary: #e9edf3;
+  --text-secondary: #8c96a6;
+  --text-muted: #6f7a8c;
+  --accent-green: #22c55e;
+  --accent-blue: #3b82f6;
+  --accent-purple: #a78bfa;
+  --accent-pink: #f472b6;
+  --accent-yellow: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-cyan: #22c3b5;
+  --input-bg: #19202b;
+  --input-border: #232b38;
+  --pulse-accent: #3b82f6;
+  --pulse-accent-hover: #2563eb;
+  --pulse-accent-soft: rgba(59, 130, 246, .14);
+  --pulse-shadow: 0 16px 48px rgba(0, 0, 0, .45);
+}
+
+/* ---------- 浅色配色 ---------- */
+html:not([data-appearance]) body.light:not(.mikus-theme) {
+  --bg-primary: #f3f5f8;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #eef1f5;
+  --border-color: #dfe3ea;
+  --border-active: #c3cad5;
+  --text-primary: #161a21;
+  --text-secondary: #5a6374;
+  --text-muted: #8b93a1;
+  --accent-green: #16a34a;
+  --accent-blue: #2563eb;
+  --accent-purple: #7c3aed;
+  --accent-yellow: #d97706;
+  --accent-red: #dc2626;
+  --accent-cyan: #0d9488;
+  --input-bg: #ffffff;
+  --input-border: #dfe3ea;
+  --pulse-accent: #3b82f6;
+  --pulse-accent-hover: #2563eb;
+  --pulse-accent-soft: rgba(59, 130, 246, .10);
+  --pulse-shadow: 0 16px 40px rgba(15, 23, 42, .12);
+}
+
+/* ---------- 字体与基础 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) {
+  --terminal-font: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 13.5px;
+  -webkit-font-smoothing: antialiased;
+}
+html:not([data-appearance]) body:not(.mikus-theme)::before { display: none; } /* 去掉终端扫描线 */
+html:not([data-appearance]) body:not(.mikus-theme) :is(code, pre, kbd, .form-textarea, textarea, .mono, .terminal-font) {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ---------- 布局容器 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .terminal-header {
+  border-radius: 12px 12px 0 0;
+  background: var(--bg-secondary);
+}
+html:not([data-appearance]) body:not(.mikus-theme) .terminal-dots { visibility: hidden; }
+html:not([data-appearance]) body:not(.mikus-theme) .main-panel {
+  border-radius: 0 0 12px 12px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) :is(.settings-section, .stat-card, .ping-node-item, .chart-card) {
+  border-radius: 12px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .settings-section {
+  padding: 18px 20px;
+}
+
+/* ---------- 标题：去掉绿色发光，统一为正文色 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) :is(.site-title, .panel-title, .stat-main-value, .stat-value, .host-name, .chart-current-value) {
+  text-shadow: none;
+}
+html:not([data-appearance]) body:not(.mikus-theme) :is(.site-title, .panel-title) {
+  color: var(--text-primary);
+  letter-spacing: -.1px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .panel-title .prompt { color: var(--pulse-accent); }
+
+/* ---------- 按钮 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .btn {
+  text-transform: none;
+  letter-spacing: 0;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .btn-primary {
+  background: var(--pulse-accent);
+  border-color: var(--pulse-accent);
+  color: #fff;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .btn-primary:hover {
+  background: var(--pulse-accent-hover);
+  border-color: var(--pulse-accent-hover);
+}
+html:not([data-appearance]) body:not(.mikus-theme) .btn-red {
+  background: rgba(239, 68, 68, .10);
+  border-color: rgba(239, 68, 68, .45);
+  color: var(--accent-red);
+}
+
+/* ---------- 标签页 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .tabs {
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .tab-btn {
+  text-transform: none;
+  letter-spacing: 0;
+  border-radius: 7px;
+  padding: 7px 16px;
+  border: 1px solid transparent;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .tab-btn::before { display: none; }
+html:not([data-appearance]) body:not(.mikus-theme) .tab-btn.active {
+  background: var(--pulse-accent-soft);
+  border-color: rgba(59, 130, 246, .35);
+  color: var(--text-primary);
+}
+
+/* ---------- 表单 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) :is(.form-input, .form-select, .form-textarea) {
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) :is(.form-input, .form-select, .form-textarea):focus {
+  border-color: var(--pulse-accent);
+  box-shadow: 0 0 0 3px var(--pulse-accent-soft);
+}
+html:not([data-appearance]) body:not(.mikus-theme) input[type="checkbox"],
+html:not([data-appearance]) body:not(.mikus-theme) input[type="radio"] {
+  accent-color: var(--pulse-accent);
+}
+
+/* ---------- 弹窗 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .modal-dialog {
+  border-radius: 14px;
+  border-color: var(--border-color);
+  box-shadow: var(--pulse-shadow);
+}
+html:not([data-appearance]) body:not(.mikus-theme) .modal-overlay {
+  backdrop-filter: blur(3px);
+}
+
+/* ---------- 链接与滚动条 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) a { color: inherit; }
+html:not([data-appearance]) body:not(.mikus-theme) ::-webkit-scrollbar { width: 8px; height: 8px; }
+html:not([data-appearance]) body:not(.mikus-theme) ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
