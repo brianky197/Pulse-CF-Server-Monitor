@@ -163,6 +163,7 @@ button, input, select { font: inherit; color: inherit; }
 .bars { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
 .bars i { flex: 1; min-width: 0; min-height: 2px; border-radius: 1px 1px 0 0; opacity: .7; transition: height .3s ease; }
 .bars i.is-gap { height: 2px; background: var(--border); opacity: 1; }
+.bars i.is-filled { opacity: .3; }
 .bars i:last-child { opacity: 1; }
 .bars i.is-loss { background: repeating-linear-gradient(180deg, rgba(239, 68, 68, .55) 0 3px, transparent 3px 6px) !important; height: 100% !important; opacity: 1; }
 .bars--empty { align-items: center; justify-content: center; color: var(--text-3); font-size: 11px; background: repeating-linear-gradient(90deg, var(--surface-2) 0 6px, transparent 6px 8px); border-radius: 4px; }

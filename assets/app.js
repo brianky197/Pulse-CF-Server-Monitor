@@ -17,8 +17,8 @@ const PROBES = [
 ];
 const PROBE_MAP = Object.fromEntries(PROBES.map(p => [p.key, p]));
 const LAT_SPAN_MS = 2 * 3600 * 1000; // 延迟图时间窗口：最近 2 小时（与后端 latency_window 一致）
-const LAT_POINTS = 40;          // 卡片延迟图：40 个时间桶（每桶 3 分钟）
-const DRAWER_POINTS = 60;       // 详情页延迟图：60 个时间桶（每桶 2 分钟）
+const LAT_POINTS = 24;          // 卡片延迟图：24 个时间桶（每桶 5 分钟，与历史窗口约 6 分钟的采样间隔匹配）
+const DRAWER_POINTS = 40;       // 详情页延迟图：40 个时间桶（每桶 3 分钟）
 const PREF_KEY = 'pulse_primary_probe';
 const APPEARANCE_KEY = 'pulse_appearance';
 const CRED_KEY = 'pulse_ts_cred';
@@ -107,7 +107,7 @@ function fmtSpeed(n) {
   if (!v) return '0 B/s';
   let i = 0;
   while (v >= 1024 && i < UNITS.length - 1) { v /= 1024; i++; }
-  return `${i <= 1 ? Math.round(v) : parseFloat(v.toFixed(i >= 3 ? 2 : 1))} ${UNITS[i]}/s`;
+  return `${i <= 1 ? Math.round(v) : (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : Math.round(v))} ${UNITS[i]}/s`;
 }
 function fmtMB(mb) {
   const v = num(mb);
@@ -437,7 +437,16 @@ function series(s, key, n) {
     b.count++;
     b.ts = p.ts;
   }
-  return buckets.map(b => (!b ? null : { ts: b.ts, v: b.count ? Math.round(b.sum / b.count) : null, loss: b.loss && !b.count }));
+  const out = buckets.map(b => (!b ? null : { ts: b.ts, v: b.count ? Math.round(b.sum / b.count) : null, loss: b.loss && !b.count }));
+  // 采样间隔造成的 1–2 个空桶用前一个值补齐（半透明显示），真正的长时间中断仍保留空缺
+  for (let i = 1; i < out.length; i++) {
+    if (out[i] || !out[i - 1] || out[i - 1].v === null) continue;
+    const next = out.slice(i + 1, i + 3).findIndex(Boolean);
+    if (next === -1) continue;
+    for (let k = 0; k <= next; k++) out[i + k] = { ...out[i - 1], filled: true };
+    i += next;
+  }
+  return out;
 }
 function barsHtml(s, key, n, height) {
   const pts = series(s, key, n);
@@ -452,7 +461,7 @@ function barsHtml(s, key, n, height) {
     if (p.v === null) return '<i class="is-loss" title="丢包 / 超时"></i>';
     const lv = latLevel(p.v);
     const h = 18 + (p.v - base) / Math.max(1, hi - base) * 82;
-    return `<i class="bg-${lv}" style="height:${clamp(h, 12, 100).toFixed(1)}%" title="${p.v} ms · ${fmtDateTime(p.ts)}"></i>`;
+    return `<i class="bg-${lv}${p.filled ? ' is-filled' : ''}" style="height:${clamp(h, 12, 100).toFixed(1)}%" title="${p.v} ms · ${fmtDateTime(p.ts)}"></i>`;
   }).join('')}</div>`;
 }
 
