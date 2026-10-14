@@ -16,8 +16,9 @@ const PROBES = [
   { key: 'node_4', ping: 'ping_node_4', loss: 'loss_node_4', def: '节点4' }
 ];
 const PROBE_MAP = Object.fromEntries(PROBES.map(p => [p.key, p]));
-const LAT_POINTS = 40;          // 卡片实时延迟图柱数
-const DRAWER_POINTS = 48;       // 详情页延迟柱数
+const LAT_SPAN_MS = 2 * 3600 * 1000; // 延迟图时间窗口：最近 2 小时（与后端 latency_window 一致）
+const LAT_POINTS = 40;          // 卡片延迟图：40 个时间桶（每桶 3 分钟）
+const DRAWER_POINTS = 60;       // 详情页延迟图：60 个时间桶（每桶 2 分钟）
 const PREF_KEY = 'pulse_primary_probe';
 const APPEARANCE_KEY = 'pulse_appearance';
 const CRED_KEY = 'pulse_ts_cred';
@@ -151,14 +152,17 @@ function pulseOpts() {
   const o = state.themeOptions && state.themeOptions.pulse;
   return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
 }
+// 五级延迟配色：优 / 良 / 中 / 偏高 / 差，阈值可通过 pulse.latency_thresholds 覆盖（4 个数，或旧版 2 个数）
 function thresholds() {
   const t = pulseOpts().latency_thresholds;
-  return Array.isArray(t) && t.length === 2 ? t.map(Number) : [100, 200];
+  if (Array.isArray(t) && t.length === 4) return t.map(Number);
+  if (Array.isArray(t) && t.length === 2) return [t[0] * 0.6, t[0], (t[0] + t[1]) / 2, t[1]].map(Number);
+  return [60, 100, 160, 200];
 }
 function latLevel(v) {
   if (!probePresent(v)) return 'muted';
-  const [a, b] = thresholds();
-  return v < a ? 'ok' : v < b ? 'warn' : 'danger';
+  const [a, b, c, d] = thresholds();
+  return v < a ? 'ok' : v < b ? 'good' : v < c ? 'mid' : v < d ? 'warn' : 'danger';
 }
 function usageLevel(p) { return p >= 90 ? 'danger' : p >= 75 ? 'warn' : ''; }
 function probeName(key) {
@@ -384,7 +388,10 @@ function pushLatency(id, ts, data) {
     const last = arr[arr.length - 1];
     if (last && last.ts === ts) continue;
     arr.push({ ts, v: probePresent(v) ? num(v) : null, loss: num(data[p.loss], 0) });
-    if (arr.length > DRAWER_POINTS) arr.splice(0, arr.length - DRAWER_POINTS);
+    // 只保留最近 LAT_SPAN_MS 的点（图表按时间分桶），并限制内存占用
+    const cutoff = Date.now() - LAT_SPAN_MS;
+    while (arr.length && arr[0].ts < cutoff) arr.shift();
+    if (arr.length > 2000) arr.splice(0, arr.length - 2000);
   }
 }
 function seedLatency(s) {
@@ -415,20 +422,37 @@ function primaryProbe(s) {
   }
   return avail[0];
 }
+// 把最近 2 小时的点按固定时间桶聚合：历史窗口（约 6 分钟一个点）与实时推送点落在同一条时间轴上
 function series(s, key, n) {
-  const arr = (latStore(s.id)[key] || []).slice(-n);
-  const pad = Array.from({ length: Math.max(0, n - arr.length) }, () => null);
-  return pad.concat(arr);
+  const now = Date.now();
+  const start = now - LAT_SPAN_MS;
+  const size = LAT_SPAN_MS / n;
+  const buckets = Array.from({ length: n }, () => null);
+  for (const p of latStore(s.id)[key] || []) {
+    if (p.ts < start) continue;
+    const i = clamp(Math.floor((p.ts - start) / size), 0, n - 1);
+    const b = buckets[i] || (buckets[i] = { sum: 0, count: 0, loss: false, ts: p.ts });
+    if (p.v === null) { b.loss = true; continue; }
+    b.sum += p.v;
+    b.count++;
+    b.ts = p.ts;
+  }
+  return buckets.map(b => (!b ? null : { ts: b.ts, v: b.count ? Math.round(b.sum / b.count) : null, loss: b.loss && !b.count }));
 }
 function barsHtml(s, key, n, height) {
   const pts = series(s, key, n);
-  if (!pts.some(Boolean)) return `<div class="bars bars--empty" style="height:${height}px">等待探测数据…</div>`;
-  const max = Math.max(thresholds()[1] * 1.5, ...pts.filter(p => p && p.v).map(p => p.v));
+  const vals = pts.filter(p => p && p.v !== null).map(p => p.v);
+  if (!vals.length) return `<div class="bars bars--empty" style="height:${height}px">等待探测数据…</div>`;
+  // 自适应纵轴：以窗口内最小 / 最大值为范围，让波动清晰可见
+  const hi = Math.max(...vals), lo = Math.min(...vals);
+  const range = Math.max(hi - lo, hi * 0.2, 10);
+  const base = Math.max(0, lo - range * 0.8);
   return `<div class="bars" style="height:${height}px">${pts.map(p => {
-    if (!p) return '<i style="height:0"></i>';
-    if (p.v === null) return '<i class="is-loss" title="无数据 / 丢包"></i>';
+    if (!p) return '<i class="is-gap"></i>';
+    if (p.v === null) return '<i class="is-loss" title="丢包 / 超时"></i>';
     const lv = latLevel(p.v);
-    return `<i class="bg-${lv}" style="height:${Math.max(8, p.v / max * 100).toFixed(1)}%" title="${p.v} ms · ${fmtDateTime(p.ts)}"></i>`;
+    const h = 18 + (p.v - base) / Math.max(1, hi - base) * 82;
+    return `<i class="bg-${lv}" style="height:${clamp(h, 12, 100).toFixed(1)}%" title="${p.v} ms · ${fmtDateTime(p.ts)}"></i>`;
   }).join('')}</div>`;
 }
 
@@ -531,9 +555,14 @@ function renderOverview() {
   }
   const offline = list.filter(s => !isOnline(s));
   const trail = state.speedTrail;
-  const tmax = Math.max(1, ...trail.map(t => t.up + t.down));
-  const padded = Array.from({ length: Math.max(0, 30 - trail.length) }, () => null).concat(trail);
-  const spark = key => `<div class="spark">${padded.map(t => !t ? '<i style="height:0"></i>' : `<i style="height:${Math.max(6, Math.min(100, t[key] / tmax * 100 * 1.6)).toFixed(0)}%;background:var(--${key})"></i>`).join('')}</div>`;
+  // 走势需要至少 6 个采样点才绘制，之前显示「采集中」，避免只有一根柱子
+  const spark = key => {
+    if (trail.length < 6) return `<div class="spark spark--empty">采集中 · ${trail.length}/6</div>`;
+    const vals = trail.map(t => t[key]);
+    const hi = Math.max(1, ...vals), lo = Math.min(...vals);
+    const base = Math.max(0, lo - (hi - lo) * 0.6);
+    return `<div class="spark">${vals.map(v => `<i style="height:${clamp(15 + (v - base) / Math.max(1, hi - base) * 85, 8, 100).toFixed(0)}%;background:var(--${key})"></i>`).join('')}</div>`;
+  };
   const cards = [
     ['server', '当前在线', `${online.length}<small>/ ${list.length}</small>`, offline.length ? `<span class="c-danger">${offline.length} 离线</span> · ${esc(offline.slice(0, 2).map(s => s.name).join(', '))}` : `在线率 ${list.length ? Math.round(online.length / list.length * 100) : 0}% · 全部正常`, `<div class="meter"><span style="width:${list.length ? online.length / list.length * 100 : 0}%;background:var(--ok)"></span></div>`],
     ['up', '实时上行', fmtSpeed(up).replace(/ (\S+)$/, '<small>$1</small>'), `峰值 ${fmtSpeed(Math.max(up, ...trail.map(t => t.up)))}`, spark('up')],
@@ -641,7 +670,7 @@ function cardHtml(s) {
         <span class="lat__now c-${lv}">${probePresent(now) ? `${Math.round(num(now))} ms` : '--'}</span>
       </div>
       ${prim ? barsHtml(s, prim.key, LAT_POINTS, 26) : '<div class="bars bars--empty" style="height:26px">—</div>'}
-      <div class="lat__axis"><span>早</span><span>其余 ${Math.max(0, availableProbes(s).length - 1)} 个探测点见详情</span><span>现在</span></div>
+      <div class="lat__axis"><span>-2h</span><span>其余 ${Math.max(0, availableProbes(s).length - 1)} 个探测点见详情</span><span>现在</span></div>
     </div>
     ${price || exp ? `<div class="card__foot">
       ${icon('coin')}<span>价值</span><span class="v">${price ? esc(price.text) : '--'}</span>
@@ -734,7 +763,7 @@ function drawerHtml(s) {
         </div>`).join('')}
       </div>
       <div>
-        <div class="section-head">实时延迟 <small>${probes.length} 个探测点 · 最近 ${DRAWER_POINTS} 次</small><button class="link r" type="button" data-probe-for="${esc(d.id)}">设置主延迟</button></div>
+        <div class="section-head">实时延迟 <small>${probes.length} 个探测点 · 最近 2 小时</small><button class="link r" type="button" data-probe-for="${esc(d.id)}">设置主延迟</button></div>
         <div class="probes" style="margin-top:12px">
           ${probes.length ? probes.map(p => {
             const v = d[p.ping];
@@ -1002,7 +1031,11 @@ function onRoute() {
   if (state.selectedId && changed) {
     $('#drawer').scrollTop = 0;
     loadDetail(state.selectedId);
-    if (innerWidth > 1100) cardEls.get(state.selectedId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    if (innerWidth > 1100) {
+      // 让侧栏顶部对齐视口，避免详情卡下半截超出屏幕
+      const top = $('#workspace').getBoundingClientRect().top + scrollY - 12;
+      if (scrollY < top) window.scrollTo({ top, behavior: 'smooth' });
+    }
   }
 }
 function go(id) { location.hash = id ? `#/server/${encodeURIComponent(id)}` : '#/'; }
@@ -1068,8 +1101,8 @@ function seedDemoHistory() {
     for (const p of PROBES) {
       const base = num(s[p.ping], 0);
       if (!base) continue;
-      store[p.key] = Array.from({ length: DRAWER_POINTS }, (_, i) => ({
-        ts: now - (DRAWER_POINTS - i) * 2000,
+      store[p.key] = Array.from({ length: 120 }, (_, i) => ({
+        ts: now - (120 - i) * 60000,
         v: Math.random() < 0.02 ? null : Math.max(1, Math.round(base * (0.85 + Math.random() * 0.3 + (i % 17 === 0 ? 0.35 : 0)))),
         loss: 0
       }));
