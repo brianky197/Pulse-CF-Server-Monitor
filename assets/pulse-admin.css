@@ -193,3 +193,17 @@ html:not([data-appearance]) body:not(.mikus-theme) .modal-overlay {
 html:not([data-appearance]) body:not(.mikus-theme) a { color: inherit; }
 html:not([data-appearance]) body:not(.mikus-theme) ::-webkit-scrollbar { width: 8px; height: 8px; }
 html:not([data-appearance]) body:not(.mikus-theme) ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* ---------- 设置页：分组标题与 WSS 时段 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .section-title {
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+}
+html:not([data-appearance]) body:not(.mikus-theme) .wss-hour-option span { border-radius: 6px; }
+html:not([data-appearance]) body:not(.mikus-theme) .wss-hour-option input:checked + span {
+  border-color: var(--pulse-accent);
+  background: var(--pulse-accent-soft);
+  color: var(--text-primary);
+}

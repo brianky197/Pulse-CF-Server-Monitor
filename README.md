@@ -57,6 +57,20 @@ python -m http.server 5178
 # 打开 http://127.0.0.1:5178/?demo=1 查看演示数据
 ```
 
+## 后台皮肤（可选）
+
+CF-Server-Monitor 的管理后台（`/admin`）固定由内置主题渲染，第三方主题无法替换后台页面。Pulse 额外提供 `assets/pulse-admin.css`，把内置后台的配色、字体、圆角、按钮与标签页调成和 Pulse 一致（同时适配深色 / 浅色）。
+
+启用方式：在后台「设置 → 外观」的「自定义 head」中加入下面一行并保存：
+
+```html
+<link rel="stylesheet" href="/assets/pulse-admin.css?v=1.0.2">
+```
+
+- 只作用于内置前端（后台页面），Pulse 前台不受影响；初音模式保持原样。
+- 只调整样式，不改变后台功能与布局；后台升级后个别新元素可能仍是原色。
+- 更换为其他主题前请删除这一行（该文件由当前主题提供）。
+
 ## 主题配置（theme_options）
 
 `theme_options` 由所有主题共享，Pulse 只读写其中的 `pulse` 命名空间，不会覆盖其他主题的配置。所有字段均可选：
