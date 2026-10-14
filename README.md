@@ -12,7 +12,9 @@
 - **主延迟实时图**：每张服务器卡片只展示 1 个「主延迟」探测点的实时柱状图（按延迟分级着色、丢包高亮），其余探测点在详情侧栏里完整展示。
 - **可设置主延迟**：点击卡片上的探测点标签即可切换。可只改当前服务器，也可一键应用到全部服务器；登录后台后还能同步保存到站点 `theme_options`，所有访客生效。
 - **响应式详情侧栏**：点击卡片后，卡片网格自动重排（例如 3 列 → 2 列），右侧滑出大卡片。窄屏下变为抽屉浮层，手机端变为底部弹出面板。
-- **地标插图**：侧栏顶部按服务器所在地区显示地标照片（洛杉矶、纽约、华盛顿、盐湖城、旧金山、纽伦堡、巴黎、伦敦、阿姆斯特丹、东京、香港、首尔、台北，外加一张通用数据中心图，共 14 张，由 AI 生成并随主题打包）。其他地区显示数据中心图，也可通过 `theme_options.pulse.landmarks` 指定。
+- **地标插图（区分深浅色）**：侧栏顶部按服务器所在地区显示地标照片。深色模式用黄昏 / 夜景，浅色模式用晴朗白天，切换外观时自动更换。
+  - 覆盖地区：洛杉矶、纽约、华盛顿、盐湖城、旧金山、纽伦堡、巴黎、伦敦、阿姆斯特丹、东京、香港、新加坡、首尔、台北、上海，外加通用数据中心图，共 16 组 × 2 张。
+  - 图片由 AI 生成并随主题打包；其他地区显示数据中心图，也可通过 `theme_options.pulse.landmarks` 指定。
 - **详情侧栏内容**：CPU / 内存 / 磁盘，全部探测点实时延迟，24 小时 CPU / 内存 / 网络趋势，以及负载、进程、连接数、磁盘 IO、流量、价格、到期等系统详情。
 - **总览**：在线数、实时上行 / 下行（带走势）、累计流量、平均负载、小鸡价值（实时汇率折算人民币，含剩余价值）。
 - **实时与额度友好**：
@@ -54,7 +56,10 @@ python -m http.server 5178
     "primary_overrides": { "<serverId>": "bd" },
     "latency_thresholds": [100, 200],
     "landmarks": {
-      "de": "https://raw.githubusercontent.com/you/assets/main/nuremberg.jpg",
+      "de": {
+        "dark": "https://raw.githubusercontent.com/you/assets/main/nuremberg-night.jpg",
+        "light": "https://raw.githubusercontent.com/you/assets/main/nuremberg-day.jpg"
+      },
       "<serverId>": "/assets/landmarks/jp.jpg"
     }
   }
@@ -66,7 +71,7 @@ python -m http.server 5178
 | `pulse.primary_probe` | 全站默认主延迟：`ct` / `cu` / `cm` / `bd` / `node_1` … `node_4` |
 | `pulse.primary_overrides` | 按服务器 ID 覆盖主延迟 |
 | `pulse.latency_thresholds` | 延迟分级阈值（毫秒），默认 `<100` 绿、`<200` 黄、其余红 |
-| `pulse.landmarks` | 地标图覆盖，键可以是地区（如 `de`、`us-la`）或服务器 ID |
+| `pulse.landmarks` | 地标图覆盖，键可以是地区（如 `de`、`us-la`）或服务器 ID；值为图片 URL，或 `{ "dark": "...", "light": "..." }` 分别指定深色 / 浅色模式的图 |
 
 访客在卡片上切换的主延迟只保存在本机浏览器，优先级高于站点配置。
 

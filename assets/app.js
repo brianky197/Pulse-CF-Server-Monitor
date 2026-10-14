@@ -34,12 +34,16 @@ const LANDMARKS = {
   nl: '阿姆斯特丹 · Amsterdam',
   jp: '东京 · Tokyo',
   hk: '香港 · Hong Kong',
+  sg: '新加坡 · Singapore',
   kr: '首尔 · Seoul',
   tw: '台北 · Taipei',
+  cn: '上海 · Shanghai',
   default: '数据中心 · Data Center'
 };
-// 随主题打包的地标图（assets/landmarks/<key>.jpg），未打包的地区回退到 default
+// 随主题打包的地标图：夜景 assets/landmarks/<key>.jpg（深色模式），白天 <key>-day.jpg（浅色模式）
+// 未打包的地区回退到 default / default-day
 const SHIPPED_LANDMARKS = new Set(Object.keys(LANDMARKS));
+const SHIPPED_DAY_LANDMARKS = new Set(Object.keys(LANDMARKS));
 const US_CITY_RULES = [
   [/洛杉矶|los\s?angeles|\blax\b/i, 'us-la'],
   [/新泽西|纽约|new\s?jersey|new\s?york|\bnyc\b|newark|secaucus/i, 'us-ny'],
@@ -441,12 +445,16 @@ function landmarkKey(s) {
   if (/德国|germany|\bde\b/i.test(text)) return 'de';
   return 'default';
 }
+// 深色模式用黄昏 / 夜景（<key>.jpg），浅色模式用晴朗白天（<key>-day.jpg）
 function landmarkUrl(s) {
   const custom = pulseOpts().landmarks || {};
   const key = landmarkKey(s);
-  if (custom[s.id]) return custom[s.id];
-  if (custom[key]) return custom[key];
-  return new URL(`./landmarks/${SHIPPED_LANDMARKS.has(key) ? key : 'default'}.jpg`, import.meta.url).href;
+  const light = state.appearance === 'light';
+  const pick = (v) => (v && typeof v === 'object' ? (light ? v.light || v.dark : v.dark || v.light) : v);
+  const override = pick(custom[s.id]) || pick(custom[key]);
+  if (override) return override;
+  const base = light && SHIPPED_DAY_LANDMARKS.has(key) ? `${key}-day` : (SHIPPED_LANDMARKS.has(key) ? key : (light ? 'default-day' : 'default'));
+  return new URL(`./landmarks/${base}.jpg`, import.meta.url).href;
 }
 
 // ==================== 8. 小鸡价值 ====================
@@ -1012,6 +1020,8 @@ function setAppearance(mode, save = true) {
   $('#theme-color-meta').setAttribute('content', mode === 'light' ? '#f3f5f8' : '#0b0e13');
   $('#btn-theme').innerHTML = icon(mode === 'light' ? 'moon' : 'sun');
   if (save) localStorage.setItem(APPEARANCE_KEY, mode);
+  // 切换外观时同步更换地标插图（白天 / 夜景）
+  if (state.selectedId) renderDrawer();
 }
 
 // ==================== 15. 演示数据 (?demo=1) ====================
