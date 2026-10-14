@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-appearance="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pulse · CF Server Monitor</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
+  <meta id="theme-color-meta" name="theme-color" content="#0b0e13">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- 纯静态 / 跨域部署时通过 apiBase 指定 Worker 地址，多个地址用英文逗号分隔 -->
+  <!-- <meta name="apiBase" content="https://your-cf-server-monitor.workers.dev"> -->
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <a class="brand" href="#/" id="brand-link">
+        <span class="brand__mark"><img src="assets/logo.svg" alt="" width="20" height="20"></span>
+        <span class="brand__text">
+          <span class="brand__title" id="site-title">CF Server Monitor</span>
+          <span class="brand__sub" id="site-sub">实时多服务器监控</span>
+        </span>
+        <span class="pill pill--mono" id="site-version">v--</span>
+      </a>
+      <div class="topbar__right">
+        <span class="live" id="live-indicator" data-state="connecting">
+          <span class="live__dot"></span><span class="live__text" id="live-text">连接中</span>
+        </span>
+        <span class="clock mono" id="clock">--:--:--</span>
+        <button class="icon-btn" id="btn-theme" type="button" title="切换深色 / 浅色" aria-label="切换主题">
+          <svg viewBox="0 0 24 24" class="i"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        </button>
+        <a class="btn btn--ghost" id="btn-admin" href="/admin#/admin" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" class="i"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+          <span>管理</span>
+        </a>
+      </div>
+    </header>
+
+    <section class="overview" id="overview" aria-label="总览"></section>
+
+    <section class="toolbar" aria-label="筛选">
+      <nav class="tabs" id="group-tabs"></nav>
+      <div class="toolbar__right">
+        <label class="search">
+          <svg viewBox="0 0 24 24" class="i"><path d="m21 21-4.3-4.3M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
+          <input id="search-input" type="search" placeholder="搜索服务器名称、分组、地区…" autocomplete="off" spellcheck="false">
+          <kbd>/</kbd>
+        </label>
+        <label class="select">
+          <span>排序</span>
+          <select id="sort-select">
+            <option value="default">默认</option>
+            <option value="cpu">CPU</option>
+            <option value="mem">内存</option>
+            <option value="latency">主延迟</option>
+            <option value="traffic">月流量</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <main class="workspace" id="workspace">
+      <section class="fleet">
+        <div class="fleet__head" id="fleet-head"></div>
+        <div class="grid" id="server-grid"></div>
+        <div class="empty hidden" id="empty-state">
+          <div class="empty__title">没有匹配的服务器</div>
+          <div class="empty__desc">试试切换分组或修改搜索关键词。</div>
+        </div>
+      </section>
+      <aside class="drawer" id="drawer" aria-hidden="true"></aside>
+    </main>
+
+    <footer class="footer" id="footer">
+      Powered by <a href="https://github.com/huilang-me/CF-Server-Monitor/" target="_blank" rel="noopener noreferrer">CF-Server-Monitor</a>
+      <span id="footer-version"></span> · Theme <a href="https://github.com/brianky197/Pulse-CF-Server-Monitor" target="_blank" rel="noopener noreferrer">Pulse</a>
+    </footer>
+  </div>
+
+  <div id="popover-root"></div>
+  <div id="overlay-root"></div>
+
+  <noscript>
+    <div style="padding:40px;text-align:center;font-family:sans-serif;color:#e9edf3;background:#0b0e13">Pulse 主题需要启用 JavaScript。</div>
+  </noscript>
+  <script src="assets/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Pulse",
+  "version": "1.0.0",
+  "description": "Real-time primary-latency cards with a landmark detail drawer for CF-Server-Monitor",
+  "author": "brianky197",
+  "preview": "docs/preview.png",
+  "homepage": "https://github.com/brianky197/Pulse-CF-Server-Monitor",
+  "license": "MIT"
+}
