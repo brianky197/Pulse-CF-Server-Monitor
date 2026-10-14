@@ -27,7 +27,17 @@
 
 ### 方式一：主题商店 / 后台安装
 
-把仓库地址填入后台「外观 → 主题」中的第三方主题地址，或提交到 [CFSM-Theme-Store](https://github.com/huilang-me/CFSM-Theme-Store)。主题产物只包含 `index.html` 与 `assets/`，符合官方主题目录约定。
+在后台「主题商店」的自定义主题地址中填写，地址必须是 `https://github.com/<用户>/<仓库>/tree/<分支或提交>` 格式。直接填仓库首页地址（不带 `/tree/...`）会提示「主题 URL 格式无效」。
+
+```text
+# 跟随 main 分支更新（Worker 会缓存一段时间）
+https://github.com/brianky197/Pulse-CF-Server-Monitor/tree/main
+
+# 固定到某个提交（永久缓存，加载最快，升级时换成新的提交号）
+https://github.com/brianky197/Pulse-CF-Server-Monitor/tree/<commit-sha>
+```
+
+也可以提交到 [CFSM-Theme-Store](https://github.com/huilang-me/CFSM-Theme-Store)。主题产物只包含 `index.html` 与 `assets/`，符合官方主题目录约定。
 
 ### 方式二：静态部署（GitHub Pages / Cloudflare Pages）
 
