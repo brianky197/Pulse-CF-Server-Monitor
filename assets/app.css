@@ -296,7 +296,10 @@ button, input, select { font: inherit; color: inherit; }
   .stat__value { font-size: 18px; }
   .stat__value small { font-size: 10px; }
   .stat__sub { font-size: 10px; }
-  .search { width: 100%; }
+  .search { width: auto; flex: 1; min-width: 0; }
+  .select span { display: none; }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; width: 100%; }
+  .tab { flex: none; }
   .toolbar__right { width: 100%; }
   .clock, .brand__sub, #site-version, #btn-admin span { display: none; }
   .topbar__right { gap: 6px; }
