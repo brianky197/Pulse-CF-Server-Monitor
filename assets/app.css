@@ -289,7 +289,13 @@ button, input, select { font: inherit; color: inherit; }
 }
 @media (max-width: 760px) {
   .app { padding: 12px 14px 20px; }
-  .overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 10px 10px; gap: 4px; border-radius: 10px; }
+  .stat__head .i, .stat .spark, .stat .meter { display: none; }
+  .stat__head { font-size: 11px; }
+  .stat__value { font-size: 18px; }
+  .stat__value small { font-size: 10px; }
+  .stat__sub { font-size: 10px; }
   .search { width: 100%; }
   .toolbar__right { width: 100%; }
   .clock, .brand__sub, #site-version, #btn-admin span { display: none; }
