@@ -29,7 +29,7 @@ html:not([data-appearance]) body:not(.light):not(.mikus-theme) {
   --accent-pink: #f472b6;
   --accent-yellow: #f59e0b;
   --accent-red: #ef4444;
-  --accent-cyan: #22c3b5;
+  --accent-cyan: #3b82f6;
   --input-bg: #19202b;
   --input-border: #232b38;
   --pulse-accent: #3b82f6;
@@ -54,7 +54,7 @@ html:not([data-appearance]) body.light:not(.mikus-theme) {
   --accent-purple: #7c3aed;
   --accent-yellow: #d97706;
   --accent-red: #dc2626;
-  --accent-cyan: #0d9488;
+  --accent-cyan: #2563eb;
   --input-bg: #ffffff;
   --input-border: #dfe3ea;
   --pulse-accent: #3b82f6;
@@ -118,9 +118,30 @@ html:not([data-appearance]) body:not(.mikus-theme) .btn-primary:hover {
   border-color: var(--pulse-accent-hover);
 }
 html:not([data-appearance]) body:not(.mikus-theme) .btn-red {
-  background: rgba(239, 68, 68, .10);
-  border-color: rgba(239, 68, 68, .45);
+  background: transparent;
+  border-color: rgba(239, 68, 68, .28);
   color: var(--accent-red);
+}
+html:not([data-appearance]) body:not(.mikus-theme) .btn-red:hover {
+  background: rgba(239, 68, 68, .10);
+  border-color: rgba(239, 68, 68, .5);
+}
+
+/* ---------- 语言 / 外观切换 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) :is(.lang-btn, .theme-btn) { border-radius: 6px; }
+html:not([data-appearance]) body:not(.mikus-theme) :is(.lang-btn, .theme-btn).active {
+  background: var(--pulse-accent);
+  border-color: var(--pulse-accent);
+  color: #fff;
+}
+
+/* ---------- 统计与提示 ---------- */
+html:not([data-appearance]) body:not(.mikus-theme) .stat-main-value { color: var(--text-primary); font-family: "JetBrains Mono", ui-monospace, monospace; }
+html:not([data-appearance]) body:not(.mikus-theme) .alert { border-radius: 10px; }
+html:not([data-appearance]) body:not(.mikus-theme) .alert-info {
+  background: var(--pulse-accent-soft);
+  border-color: rgba(59, 130, 246, .3);
+  color: var(--text-primary);
 }
 
 /* ---------- 标签页 ---------- */
