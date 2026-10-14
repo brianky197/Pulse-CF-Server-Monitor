@@ -1,6 +1,6 @@
 {
   "name": "Pulse",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time primary-latency cards with a landmark detail drawer for CF-Server-Monitor",
   "author": "brianky197",
   "preview": "docs/preview.png",

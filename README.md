@@ -37,6 +37,8 @@ https://github.com/brianky197/Pulse-CF-Server-Monitor/tree/main
 https://github.com/brianky197/Pulse-CF-Server-Monitor/tree/<commit-sha>
 ```
 
+> 切换主题后如果页面错乱（图标巨大、没有卡片），通常是浏览器还缓存着上一个主题的 `assets/app.*`。Pulse 从 1.0.1 起使用 `assets/pulse.*?v=版本号`，不会再和其他主题冲突；旧版本可按 Ctrl+F5 强制刷新。Worker 会把分支地址的 `index.html` 缓存最多 1 小时，想立即生效请使用固定提交号的地址。
+
 也可以提交到 [CFSM-Theme-Store](https://github.com/huilang-me/CFSM-Theme-Store)。主题产物只包含 `index.html` 与 `assets/`，符合官方主题目录约定。
 
 ### 方式二：静态部署（GitHub Pages / Cloudflare Pages）

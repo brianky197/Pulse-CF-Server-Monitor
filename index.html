@@ -7,19 +7,20 @@
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="dark light">
   <meta id="theme-color-meta" name="theme-color" content="#0b0e13">
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/pulse-logo.svg?v=1.0.1" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- 纯静态 / 跨域部署时通过 apiBase 指定 Worker 地址，多个地址用英文逗号分隔 -->
   <!-- <meta name="apiBase" content="https://your-cf-server-monitor.workers.dev"> -->
-  <link rel="stylesheet" href="assets/app.css">
+  <!-- 资源文件名带 pulse 前缀并附版本号：避免与其他主题（同样使用 assets/app.*）的浏览器缓存冲突，发布新版本时同步修改 v= -->
+  <link rel="stylesheet" href="assets/pulse.css?v=1.0.1">
 </head>
 <body>
   <div id="app" class="app">
     <header class="topbar">
       <a class="brand" href="#/" id="brand-link">
-        <span class="brand__mark"><img src="assets/logo.svg" alt="" width="20" height="20"></span>
+        <span class="brand__mark"><img src="assets/pulse-logo.svg?v=1.0.1" alt="" width="20" height="20"></span>
         <span class="brand__text">
           <span class="brand__title" id="site-title">CF Server Monitor</span>
           <span class="brand__sub" id="site-sub">实时多服务器监控</span>
@@ -88,6 +89,6 @@
   <noscript>
     <div style="padding:40px;text-align:center;font-family:sans-serif;color:#e9edf3;background:#0b0e13">Pulse 主题需要启用 JavaScript。</div>
   </noscript>
-  <script src="assets/app.js" type="module"></script>
+  <script src="assets/pulse.js?v=1.0.1" type="module"></script>
 </body>
 </html>
